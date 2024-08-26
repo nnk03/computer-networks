@@ -2,3 +2,4 @@ ComputerNetworks.pdf
 
 01-lab-1
 */*.pdf
+!03-lab-3/*.pdf
