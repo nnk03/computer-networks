@@ -28,4 +28,20 @@ SMTP - Simple Mail Transfer Protocol\
 IMAP - Internet Mail Access Protocol\
 HTTP - Hyper Text Transfer Protocol\
 HTML - Hyper Text Markup language\
-IP - Internet Protocol
+IP - Internet Protocol\
+PPP - Point to Point Protocol
+
+\
+P2P - Peer to Peer
+
+ARQ - Automatic Repeat Request\
+PoP - Points of Presence\
+IXP - Internet Exchange Points\
+VoIP - Voice over IP\
+DNS - Domain Name System
+
+Packet of information in\
+Application Layer - Message\
+Transport Layer - Segment\
+Network Layer - Datagrams\
+Link Layer - Frames
