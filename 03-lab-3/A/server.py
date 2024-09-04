@@ -1,9 +1,17 @@
 import socket
+import sys
+import select
 
-serverPort = 12000
 
-serverSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-serverSocket.bind(("", serverPort))
+def main():
+    serverPort = 12000
 
-while True:
-    value = True
+    sessionList = []
+
+    serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    serverSocket.bind(("localhost", serverPort))
+    serverSocket.listen()
+
+
+if __name__ == "__main__":
+    main()
