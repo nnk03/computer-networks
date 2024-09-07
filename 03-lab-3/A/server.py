@@ -1,17 +1,15 @@
-import socket
-import sys
-import select
+import asyncio, select, sys
 
 
-def main():
-    serverPort = 12000
+class Session:
+    def __init__(self, sessionId) -> None:
+        self.sessionId = sessionId
 
-    sessionList = []
 
-    serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    serverSocket.bind(("localhost", serverPort))
-    serverSocket.listen()
+class Server:
+    def __init__(self) -> None:
+        self.sessions = []
 
 
 if __name__ == "__main__":
-    main()
+    server = Server()
