@@ -1,5 +1,6 @@
 ComputerNetworks.pdf
 Solutions_to_book.pdf
+python-asyncio
 
 01-lab-1/*
 */*.pdf
@@ -8,3 +9,4 @@ Solutions_to_book.pdf
 # !01-lab-1/Computer_Networks_Assignment_1.pdf
 !*/Computer_Networks_Assignment*
 !*/Computer_Networks_Lab_Assignment*
+*/.venv
