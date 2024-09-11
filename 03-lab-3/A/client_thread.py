@@ -5,12 +5,11 @@ from random import randint
 import ast
 
 # Global constants
-
 HELLO, DATA, ALIVE, GOODBYE = 0, 1, 2, 3
 MAGIC = 0xC461
 VERSION = 1
 # timeout interval in seconds
-TIMEOUT_INTERVAL = 20
+TIMEOUT_INTERVAL = 10
 
 
 class ClientThread:
@@ -29,18 +28,21 @@ class ClientThread:
         # Send HELLO and wait for response
         self.sendMessage(HELLO, "")
         # timer is automatically started if there are no existing timers
-        self.waitForServerHello()
+        waitForServerHelloThread = threading.Thread(target=self.waitForServerHello)
+        waitForServerHelloThread.start()
 
         listenForServerThread = threading.Thread(target=self.listenForServer)
         listenForServerThread.start()
 
         try:
             while self.isClientRunning:
-                inputData = sys.stdin.readline().strip()
+                inputData = input()
                 if inputData == "q":
                     self.stopClient()
                     return
 
+                # wait for server hello and then only send
+                waitForServerHelloThread.join()
                 # send the data to server
                 self.sendMessage(DATA, inputData)
 
@@ -49,7 +51,7 @@ class ClientThread:
 
         finally:
             self.stopClient()
-            listenForServerThread.join()
+            # listenForServerThread.join()
 
     def stopClient(self):
         # Send goodbye before terminating client
@@ -125,6 +127,7 @@ class ClientThread:
             # already timer running
             return
         self.timer = threading.Timer(TIMEOUT_INTERVAL, self.timeout)
+        self.timer.start()
 
     def stopTimer(self):
         if self.timer:
