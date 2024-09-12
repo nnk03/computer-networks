@@ -10,6 +10,8 @@ VERSION = 1
 # timeout interval in seconds
 TIMEOUT_INTERVAL = 20
 
+SERVER_CLOCK = 0
+
 
 class SessionNonThread:
     def __init__(
@@ -73,6 +75,7 @@ class SessionNonThread:
 
         self.lastReceived = clientSeqNum
         if command == GOODBYE:
+            self.printDataToTerminal("GOODBYE from client")
             await self.sendMessage(GOODBYE, "")
             await self.stopSession()
 
@@ -85,15 +88,17 @@ class SessionNonThread:
         print(f"{hex(self.sessionId)} [{self.sessionSeqNum}] {data}")
 
     async def sendMessage(self, command: int, data: str):
+        global SERVER_CLOCK
         loop = asyncio.get_event_loop()
         async with self.asyncLock:
+            SERVER_CLOCK += 1
             messageList = [
                 MAGIC,
                 VERSION,
                 command,
                 self.sessionSeqNum,
                 self.sessionId,
-                self.logicalClock,
+                SERVER_CLOCK,
                 data,
             ]
 
@@ -176,11 +181,15 @@ class ServerNonThread:
     async def handleClient(self):
         loop = asyncio.get_event_loop()
         while self.isServerRunning:
+            global SERVER_CLOCK
             data, clientAddress = await loop.sock_recvfrom(self.serverSocket, 4096)
             message = ast.literal_eval(data.decode())
-            magic, version, command, serverSeqNum, sessionId, serverLogicalClock = (
+            magic, version, command, serverSeqNum, sessionId, clientLogicalClock = (
                 message[:6]
             )
+
+            async with self.asyncLock:
+                SERVER_CLOCK = max(SERVER_CLOCK + 1, clientLogicalClock)
 
             assert magic == MAGIC and version == VERSION
 

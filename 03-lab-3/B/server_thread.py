@@ -12,6 +12,8 @@ VERSION = 1
 # timeout interval in seconds
 TIMEOUT_INTERVAL = 20
 
+SERVER_CLOCK = 0
+
 
 class SessionThread:
     def __init__(
@@ -66,6 +68,7 @@ class SessionThread:
         self.lastReceived = clientSeqNum
         if command == GOODBYE:
             # self.sendMessage(GOODBYE, "")
+            self.printDataToTerminal("GOODBYE from client")
             self.stopSession()
 
         elif command == DATA:
@@ -83,19 +86,22 @@ class SessionThread:
         print(f"{hex(self.sessionId)} [{self.sessionSeqNum}] {data}")
 
     def sendMessage(self, command: int, data: str):
+        global SERVER_CLOCK
         with self.threadLock:
+            SERVER_CLOCK += 1
             messageList = [
                 MAGIC,
                 VERSION,
                 command,
                 self.sessionSeqNum,
                 self.sessionId,
-                self.logicalClock,
+                SERVER_CLOCK,
                 data,
             ]
 
             sendMessage = str(messageList).encode()
             assert isinstance(self.serverSocket, socket.socket)
+            print(SERVER_CLOCK)
             self.serverSocket.sendto(sendMessage, self.clientAddress)
             self.sessionSeqNum += 1
 
@@ -160,12 +166,16 @@ class ServerThread:
                 self.stopServer()
 
     def handleClient(self):
+        global SERVER_CLOCK
         while self.isServerRunning:
             data, clientAddress = self.serverSocket.recvfrom(4096)
             message = ast.literal_eval(data.decode())
-            magic, version, command, serverSeqNum, sessionId, serverLogicalClock = (
+            magic, version, command, serverSeqNum, sessionId, clientLogicalClock = (
                 message[:6]
             )
+
+            with self.threadLock:
+                SERVER_CLOCK = max(SERVER_CLOCK + 1, clientLogicalClock)
 
             assert magic == MAGIC and version == VERSION
 

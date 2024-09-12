@@ -11,6 +11,8 @@ VERSION = 1
 # timeout interval in seconds
 TIMEOUT_INTERVAL = 10
 
+CLIENT_CLOCK = 0
+
 
 class ClientNonThread:
     def __init__(self, hostname="127.0.0.1", portNum=1234) -> None:
@@ -24,6 +26,7 @@ class ClientNonThread:
         self.timerTask = None
 
     async def waitForServerHello(self):
+        global CLIENT_CLOCK
         loop = asyncio.get_event_loop()
         while self.isClientRunning:
             try:
@@ -32,6 +35,9 @@ class ClientNonThread:
                 magic, version, command, serverSeqNum, sessionId, serverLogicalClock = (
                     message[:6]
                 )
+
+                async with self.asyncLock:
+                    CLIENT_CLOCK = max(CLIENT_CLOCK + 1, serverLogicalClock)
 
                 assert magic == MAGIC and version == VERSION
                 if command == HELLO and self.sessionId == sessionId:
@@ -46,6 +52,7 @@ class ClientNonThread:
                 print(f"Invalid Response {e}")
 
     async def listenForServer(self):
+        global CLIENT_CLOCK
         loop = asyncio.get_event_loop()
         while self.isClientRunning:
             try:
@@ -57,6 +64,9 @@ class ClientNonThread:
                 magic, version, command, serverSeqNum, sessionId, serverLogicalClock = (
                     message[:6]
                 )
+
+                async with self.asyncLock:
+                    CLIENT_CLOCK = max(CLIENT_CLOCK + 1, serverLogicalClock)
 
                 assert magic == MAGIC and version == VERSION
 
@@ -143,15 +153,17 @@ class ClientNonThread:
         # _ = asyncio.create_task(self.listenForServer())
 
     async def sendMessage(self, command: int, data: str):
+        global CLIENT_CLOCK
         loop = asyncio.get_event_loop()
         async with self.asyncLock:
+            CLIENT_CLOCK += 1
             messageList = [
                 MAGIC,
                 VERSION,
                 command,
                 self.clientSeqNum,
                 self.sessionId,
-                self.logicalClock,
+                CLIENT_CLOCK,
                 data,
             ]
 

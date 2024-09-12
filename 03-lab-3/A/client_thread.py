@@ -11,6 +11,8 @@ VERSION = 1
 # timeout interval in seconds
 TIMEOUT_INTERVAL = 10
 
+CLIENT_CLOCK = 0
+
 
 class ClientThread:
     def __init__(self, hostname="127.0.0.1", portNum=1234) -> None:
@@ -62,6 +64,7 @@ class ClientThread:
         os._exit(0)
 
     def listenForServer(self):
+        global CLIENT_CLOCK
         while self.isClientRunning:
             try:
                 data, serverAddress = self.clientSocket.recvfrom(4096)
@@ -69,6 +72,9 @@ class ClientThread:
                 magic, version, command, serverSeqNum, sessionId, serverLogicalClock = (
                     message[:6]
                 )
+
+                with self.threadLock:
+                    CLIENT_CLOCK = max(CLIENT_CLOCK + 1, serverLogicalClock)
 
                 assert magic == MAGIC and version == VERSION
 
@@ -85,6 +91,7 @@ class ClientThread:
                 pass
 
     def waitForServerHello(self):
+        global CLIENT_CLOCK
         while self.isClientRunning:
             try:
                 data, serverAddress = self.clientSocket.recvfrom(4096)
@@ -94,6 +101,9 @@ class ClientThread:
                     message[:6]
                 )
                 assert magic == MAGIC and version == VERSION
+
+                with self.threadLock:
+                    CLIENT_CLOCK = max(CLIENT_CLOCK + 1, serverLogicalClock)
 
                 if command == HELLO and self.sessionId == sessionId:
                     print("Received Hello from Server")
@@ -108,18 +118,21 @@ class ClientThread:
                 print(f"Invalid Response {e}")
 
     def sendMessage(self, command: int, data: str):
+        global CLIENT_CLOCK
         with self.threadLock:
+            CLIENT_CLOCK += 1
             messageList = [
                 MAGIC,
                 VERSION,
                 command,
                 self.clientSeqNum,
                 self.sessionId,
-                self.logicalClock,
+                CLIENT_CLOCK,
                 data,
             ]
 
             sendMessage = str(messageList).encode()
+            print(CLIENT_CLOCK)
             self.clientSocket.sendto(sendMessage, self.serverAddress)
 
             self.clientSeqNum += 1
