@@ -8,7 +8,7 @@ HELLO, DATA, ALIVE, GOODBYE = 0, 1, 2, 3
 MAGIC = 0xC461
 VERSION = 1
 # timeout interval in seconds
-TIMEOUT_INTERVAL = 20  # debug
+TIMEOUT_INTERVAL = 20
 
 
 class SessionNonThread:
