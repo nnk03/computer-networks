@@ -101,7 +101,6 @@ class SessionThread:
 
             sendMessage = str(messageList).encode()
             assert isinstance(self.serverSocket, socket.socket)
-            print(SERVER_CLOCK)
             self.serverSocket.sendto(sendMessage, self.clientAddress)
             self.sessionSeqNum += 1
 

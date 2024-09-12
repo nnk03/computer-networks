@@ -132,7 +132,6 @@ class ClientThread:
             ]
 
             sendMessage = str(messageList).encode()
-            print(CLIENT_CLOCK)
             self.clientSocket.sendto(sendMessage, self.serverAddress)
 
             self.clientSeqNum += 1
