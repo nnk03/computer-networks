@@ -34,15 +34,20 @@ class ClientThread:
         listenForServerThread = threading.Thread(target=self.listenForServer)
         listenForServerThread.start()
 
+        helloReceived = False
+
         try:
             while self.isClientRunning:
-                inputData = input()
+                inputData = input("Enter Input : ")
                 if inputData == "q":
                     self.stopClient()
                     return
 
                 # wait for server hello and then only send
-                waitForServerHelloThread.join()
+                if not helloReceived:
+                    waitForServerHelloThread.join()
+                    helloReceived = True
+                print(inputData)  # debug
                 # send the data to server
                 self.sendMessage(DATA, inputData)
 
@@ -84,7 +89,7 @@ class ClientThread:
     def waitForServerHello(self):
         while self.isClientRunning:
             try:
-                data, serverAddress = self.clientSocket.recvfrom(1024)
+                data, serverAddress = self.clientSocket.recvfrom(4096)
                 message = ast.literal_eval(data.decode())
 
                 magic, version, command, serverSeqNum, sessionId, serverLogicalClock = (
@@ -119,7 +124,8 @@ class ClientThread:
             self.clientSocket.sendto(sendMessage, self.serverAddress)
 
             self.clientSeqNum += 1
-            # start timer
+            # restart timer
+            self.stopTimer()
             self.startTimer()
 
     def startTimer(self):
