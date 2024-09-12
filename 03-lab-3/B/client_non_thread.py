@@ -78,7 +78,8 @@ class ClientNonThread:
     async def asyncInput(self) -> str:
         loop = asyncio.get_event_loop()
         try:
-            return await loop.run_in_executor(None, lambda: input("Enter input : "))
+            # return await loop.run_in_executor(None, lambda: input("Enter input : "))
+            return await loop.run_in_executor(None, input)
         except EOFError or KeyboardInterrupt as e:
             return "q"
 

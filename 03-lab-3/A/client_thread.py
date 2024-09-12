@@ -38,7 +38,7 @@ class ClientThread:
 
         try:
             while self.isClientRunning:
-                inputData = input("Enter Input : ")
+                inputData = input()
                 if inputData == "q":
                     self.stopClient()
                     return
