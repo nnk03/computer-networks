@@ -8,7 +8,7 @@ HELLO, DATA, ALIVE, GOODBYE = 0, 1, 2, 3
 MAGIC = 0xC461
 VERSION = 1
 # timeout interval in seconds
-TIMEOUT_INTERVAL = 100  # debug
+TIMEOUT_INTERVAL = 20  # debug
 
 
 class SessionNonThread:
@@ -47,8 +47,9 @@ class SessionNonThread:
 
     async def stopSession(self):
         # make session alive to be false so that the main server will delete this from its dictionary
-        self.isSessionAlive = False
-        print(f"{hex(self.sessionId)} Session closed")
+        if self.isSessionAlive:
+            print(f"{hex(self.sessionId)} Session closed")
+            self.isSessionAlive = False
         await self.sendMessage(GOODBYE, "")
 
     async def processData(self, message: list):
@@ -56,6 +57,7 @@ class SessionNonThread:
         magic, version, command, clientSeqNum, sessionId, serverLogicalClock = message[
             :6
         ]
+        self.destroyTimer()
 
         assert magic == MAGIC and version == VERSION
 
@@ -75,6 +77,7 @@ class SessionNonThread:
             await self.stopSession()
 
         elif command == DATA:
+            # timer restarted inside send message
             self.printDataToTerminal(message[6])
             await self.sendMessage(ALIVE, "")
 
@@ -100,6 +103,7 @@ class SessionNonThread:
             self.sessionSeqNum += 1
 
             # start timer
+            self.destroyTimer()
             self.createTimer()
 
     def createTimer(self):
@@ -118,9 +122,10 @@ class SessionNonThread:
     async def timeout(self):
         if self.timerTask is None:
             return
-        print(f"Timeout occured, stopping session {hex(self.sessionId)}")
         async with self.asyncLock:
-            self.isSessionAlive = False
+            if self.isSessionAlive:
+                print(f"Timeout occured, stopping session {hex(self.sessionId)}")
+                self.isSessionAlive = False
         self.destroyTimer()
         await self.stopSession()
 

@@ -10,7 +10,7 @@ HELLO, DATA, ALIVE, GOODBYE = 0, 1, 2, 3
 MAGIC = 0xC461
 VERSION = 1
 # timeout interval in seconds
-TIMEOUT_INTERVAL = 100  # debug
+TIMEOUT_INTERVAL = 20  # debug
 
 
 class SessionThread:
@@ -32,6 +32,7 @@ class SessionThread:
         magic, version, command, clientSeqNum, sessionId, serverLogicalClock = message[
             :6
         ]
+        self.stopTimer()
 
         assert magic == MAGIC and version == VERSION and clientSeqNum == 0
         if command != HELLO:
@@ -47,6 +48,7 @@ class SessionThread:
         magic, version, command, clientSeqNum, sessionId, serverLogicalClock = message[
             :6
         ]
+        self.stopTimer()
 
         assert magic == MAGIC and version == VERSION
 
@@ -63,7 +65,7 @@ class SessionThread:
 
         self.lastReceived = clientSeqNum
         if command == GOODBYE:
-            self.sendMessage(GOODBYE, "")
+            # self.sendMessage(GOODBYE, "")
             self.stopSession()
 
         elif command == DATA:
@@ -72,9 +74,10 @@ class SessionThread:
 
     def stopSession(self):
         # make session alive to be false so that the main server will delete this from its dictionary
-        self.isSessionAlive = False
-        print(f"{hex(self.sessionId)} Session closed")
-        self.sendMessage(GOODBYE, "")
+        if self.isSessionAlive:
+            self.isSessionAlive = False
+            print(f"{hex(self.sessionId)} Session closed")
+            self.sendMessage(GOODBYE, "")
 
     def printDataToTerminal(self, data: str):
         print(f"{hex(self.sessionId)} [{self.sessionSeqNum}] {data}")
@@ -104,6 +107,7 @@ class SessionThread:
             return
 
         self.timerThread = threading.Timer(TIMEOUT_INTERVAL, self.timeout)
+        self.timerThread.start()
 
     def stopTimer(self):
         if self.timerThread is None:
@@ -116,12 +120,15 @@ class SessionThread:
     def timeout(self):
         if self.timerThread is None:
             return
-        print(f"Timeout occured, stopping session {hex(self.sessionId)}")
-        with self.threadLock:
-            self.isSessionAlive = False
 
-        # if self.timerThread:
-        #     self.timerThread.cancel()
+        with self.threadLock:
+            if self.isSessionAlive:
+                print(f"Timeout occured, stopping session {hex(self.sessionId)}")
+                # if self.timerThread:
+                #     self.timerThread.cancel()
+                if self.timerThread:
+                    self.timerThread.cancel()
+                self.timerThread = None
         self.stopSession()
 
 

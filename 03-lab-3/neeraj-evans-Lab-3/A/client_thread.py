@@ -34,7 +34,10 @@ class ClientThread:
         listenForServerThread = threading.Thread(target=self.listenForServer)
         listenForServerThread.start()
 
-        helloReceived = False
+        # wait for server hello
+        waitForServerHelloThread.join()
+
+        # helloReceived = False
 
         try:
             while self.isClientRunning:
@@ -43,12 +46,6 @@ class ClientThread:
                     self.stopClient()
                     return
 
-                # wait for server hello and then only send
-                if not helloReceived:
-                    waitForServerHelloThread.join()
-                    helloReceived = True
-                # print(inputData)  # debug
-                # send the data to server
                 self.sendMessage(DATA, inputData)
 
         except EOFError as e:
