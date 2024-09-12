@@ -19,7 +19,6 @@ class ClientNonThread:
         self.sessionId = randint(0, 2**31 - 1)
         self.clientSeqNum = 0
         self.asyncLock = asyncio.Lock()
-        # what is logical clock doing ?
         self.logicalClock = 0
         self.isClientRunning = True
         self.timerTask = None
