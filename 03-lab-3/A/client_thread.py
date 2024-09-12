@@ -47,7 +47,7 @@ class ClientThread:
                 if not helloReceived:
                     waitForServerHelloThread.join()
                     helloReceived = True
-                print(inputData)  # debug
+                # print(inputData)  # debug
                 # send the data to server
                 self.sendMessage(DATA, inputData)
 
@@ -77,6 +77,7 @@ class ClientThread:
                 assert magic == MAGIC and version == VERSION
 
                 if command == ALIVE:
+                    # print("ALIVE")
                     self.stopTimer()
                     pass
                 elif command == GOODBYE:
@@ -101,7 +102,7 @@ class ClientThread:
                 if command == HELLO and self.sessionId == sessionId:
                     print("Received Hello from Server")
                     self.stopTimer()
-                    self.startTimer()
+                    # self.startTimer()
                     return
 
             except EOFError or KeyboardInterrupt as e:
@@ -127,7 +128,7 @@ class ClientThread:
 
             self.clientSeqNum += 1
             # restart timer
-            self.stopTimer()
+            # self.stopTimer()
             self.startTimer()
 
     def startTimer(self):

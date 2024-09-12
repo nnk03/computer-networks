@@ -11,9 +11,14 @@ VERSION = 1
 TIMEOUT_INTERVAL = 100  # debug
 
 
-class Session:
+class SessionNonThread:
     def __init__(
-        self, sessionId, serverSocket, serverAddress, clientAddress, asyncLock
+        self,
+        sessionId,
+        serverSocket,
+        serverAddress,
+        clientAddress,
+        asyncLock,
     ):
         self.sessionId = sessionId
         self.serverAddress = serverAddress
@@ -78,7 +83,7 @@ class Session:
 
     async def sendMessage(self, command: int, data: str):
         loop = asyncio.get_event_loop()
-        async with self.asyncLock:  # error thrown ??
+        async with self.asyncLock:
             messageList = [
                 MAGIC,
                 VERSION,
@@ -114,7 +119,7 @@ class Session:
         if self.timerTask is None:
             return
         print(f"Timeout occured, stopping session {hex(self.sessionId)}")
-        with self.asyncLock:
+        async with self.asyncLock:
             self.isSessionAlive = False
         self.destroyTimer()
         await self.stopSession()
@@ -142,13 +147,6 @@ class ServerNonThread:
         self.checkSessionAliveTasks = {}
         print(f"Server listening on port number {portNum}")
 
-    def takeInput(self):
-        try:
-            lineInput = input()
-            return lineInput
-        except EOFError or KeyboardInterrupt as e:
-            return "q"
-
     async def asyncInput(self) -> str:
         loop = asyncio.get_event_loop()
         try:
@@ -165,31 +163,14 @@ class ServerNonThread:
                     await self.stopServer()
                     return
 
-                print(userInput)
+                # print(userInput)
 
             except Exception as e:
                 await self.stopServer()
 
-        # try:
-        #     # inputTerminal = await loop.run_in_executor(None, sys.stdin.readline)
-        #     inputTerminal = input()
-        #     if inputTerminal.strip() == "q":
-        #         # stop the server
-        #         print("Server terminating")
-        #         await self.stopServer()
-        #         return
-        #     print(inputTerminal)
-        #
-        # except EOFError or KeyboardInterrupt as e:
-        #     print("Server terminating")
-        #     await self.stopServer()
-        #     # print(e)
-        #     # break
-
     async def handleClient(self):
         loop = asyncio.get_event_loop()
         while self.isServerRunning:
-            print("Handling client")
             data, clientAddress = await loop.sock_recvfrom(self.serverSocket, 4096)
             message = ast.literal_eval(data.decode())
             magic, version, command, serverSeqNum, sessionId, serverLogicalClock = (
@@ -198,12 +179,10 @@ class ServerNonThread:
 
             assert magic == MAGIC and version == VERSION
 
-            sessionTask = None
-
             if sessionId not in self.sessions:
                 if command != HELLO:
                     continue
-                session = Session(
+                session = SessionNonThread(
                     sessionId,
                     self.serverSocket,
                     self.serverAddress,
@@ -214,24 +193,9 @@ class ServerNonThread:
                 # await session.startSession(message)
                 sessionStart = asyncio.create_task(session.startSession(message))
 
-                # await session.sendMessage(GOODBYE, "")
-                # self.sessionTasks[sessionId] = sessionTask
-                # checkSessionTask = asyncio.create_task(
-                #     self.checkSessionAlive(sessionId)
-                # )
-                # self.checkSessionAliveTasks[sessionId] = checkSessionTask
             else:
                 session = self.sessions[sessionId]
                 sessionTask = asyncio.create_task(session.processData(message))
-
-    async def checkSessionAlive(self, sessionId):
-        while True:
-            if sessionId not in self.sessions:
-                break
-            session = self.sessions[sessionId]
-            assert isinstance(session, Session)
-            if not session.isSessionAlive:
-                del self.sessions[sessionId]
 
     async def startServer(self):
         self.loop = asyncio.get_event_loop()
@@ -240,7 +204,9 @@ class ServerNonThread:
 
     async def stopServer(self):
         for session in self.sessions.values():
-            await session.stopSession()
+            assert isinstance(session, SessionNonThread)
+            if session.isSessionAlive:
+                await session.stopSession()
 
         os._exit(0)
 
@@ -252,4 +218,4 @@ if __name__ == "__main__":
     hostname = "127.0.0.1"
 
     server = ServerNonThread(hostname, portNum)
-    asyncio.run(server.startServer(), debug=True)
+    asyncio.run(server.startServer(), debug=False)
