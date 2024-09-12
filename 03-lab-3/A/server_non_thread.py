@@ -1,9 +1,7 @@
 #!/usr/bin/python3
 
 import os, sys, asyncio, socket
-from random import randint
 import ast
-import select
 
 # Global constants
 HELLO, DATA, ALIVE, GOODBYE = 0, 1, 2, 3
@@ -236,9 +234,6 @@ class ServerNonThread:
                 del self.sessions[sessionId]
 
     async def startServer(self):
-        """
-        for now leave terminal task, we'll come back to it later
-        """
         self.loop = asyncio.get_event_loop()
 
         await asyncio.gather(self.handleClient(), self.handleTerminal())

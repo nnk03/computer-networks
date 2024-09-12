@@ -77,6 +77,7 @@ class ClientThread:
                 assert magic == MAGIC and version == VERSION
 
                 if command == ALIVE:
+                    self.stopTimer()
                     pass
                 elif command == GOODBYE:
                     print("SERVER has terminated the session")
@@ -100,6 +101,7 @@ class ClientThread:
                 if command == HELLO and self.sessionId == sessionId:
                     print("Received Hello from Server")
                     self.stopTimer()
+                    self.startTimer()
                     return
 
             except EOFError or KeyboardInterrupt as e:
