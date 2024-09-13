@@ -83,7 +83,8 @@ class SessionThread:
             self.sendMessage(GOODBYE, "")
 
     def printDataToTerminal(self, data: str):
-        print(f"{hex(self.sessionId)} [{self.sessionSeqNum}] {data}")
+        # print(f"{hex(self.sessionId)} [{self.sessionSeqNum}] {data}")
+        print(f"{hex(self.sessionId)} [{self.sessionSeqNum}] [{SERVER_CLOCK}] {data}")
 
     def sendMessage(self, command: int, data: str):
         global SERVER_CLOCK
@@ -174,7 +175,7 @@ class ServerThread:
             )
 
             with self.threadLock:
-                SERVER_CLOCK = max(SERVER_CLOCK + 1, clientLogicalClock)
+                SERVER_CLOCK = max(SERVER_CLOCK + 1, clientLogicalClock + 1)
 
             assert magic == MAGIC and version == VERSION
 

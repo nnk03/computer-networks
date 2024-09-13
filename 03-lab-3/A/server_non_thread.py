@@ -34,7 +34,7 @@ class SessionNonThread:
         self.lastReceived = -1
 
     async def startSession(self, message: list):
-        magic, version, command, clientSeqNum, sessionId, serverLogicalClock = message[
+        magic, version, command, clientSeqNum, sessionId, clientLogicalClock = message[
             :6
         ]
 
@@ -55,8 +55,9 @@ class SessionNonThread:
         await self.sendMessage(GOODBYE, "")
 
     async def processData(self, message: list):
+        global SERVER_CLOCK
         # process data
-        magic, version, command, clientSeqNum, sessionId, serverLogicalClock = message[
+        magic, version, command, clientSeqNum, sessionId, clientLogicalClock = message[
             :6
         ]
         self.destroyTimer()
@@ -74,6 +75,9 @@ class SessionNonThread:
                 await self.stopSession()
 
         self.lastReceived = clientSeqNum
+
+        SERVER_CLOCK = max(SERVER_CLOCK + 1, clientLogicalClock + 1)
+
         if command == GOODBYE:
             self.printDataToTerminal("GOODBYE from client")
             await self.sendMessage(GOODBYE, "")
@@ -85,6 +89,7 @@ class SessionNonThread:
             await self.sendMessage(ALIVE, "")
 
     def printDataToTerminal(self, data: str):
+        # print(f"{hex(self.sessionId)} [{self.sessionSeqNum}] [{SERVER_CLOCK}] {data}")
         print(f"{hex(self.sessionId)} [{self.sessionSeqNum}] {data}")
 
     async def sendMessage(self, command: int, data: str):
@@ -189,7 +194,7 @@ class ServerNonThread:
             )
 
             async with self.asyncLock:
-                SERVER_CLOCK = max(SERVER_CLOCK + 1, clientLogicalClock)
+                SERVER_CLOCK = max(SERVER_CLOCK + 1, clientLogicalClock + 1)
 
             assert magic == MAGIC and version == VERSION
 

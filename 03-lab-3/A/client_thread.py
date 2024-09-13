@@ -74,7 +74,7 @@ class ClientThread:
                 )
 
                 with self.threadLock:
-                    CLIENT_CLOCK = max(CLIENT_CLOCK + 1, serverLogicalClock)
+                    CLIENT_CLOCK = max(CLIENT_CLOCK + 1, serverLogicalClock + 1)
 
                 assert magic == MAGIC and version == VERSION
 
@@ -103,7 +103,7 @@ class ClientThread:
                 assert magic == MAGIC and version == VERSION
 
                 with self.threadLock:
-                    CLIENT_CLOCK = max(CLIENT_CLOCK + 1, serverLogicalClock)
+                    CLIENT_CLOCK = max(CLIENT_CLOCK + 1, serverLogicalClock + 1)
 
                 if command == HELLO and self.sessionId == sessionId:
                     print("Received Hello from Server")
