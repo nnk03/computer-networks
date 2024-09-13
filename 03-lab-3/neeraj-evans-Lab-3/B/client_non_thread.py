@@ -37,7 +37,7 @@ class ClientNonThread:
                 )
 
                 async with self.asyncLock:
-                    CLIENT_CLOCK = max(CLIENT_CLOCK + 1, serverLogicalClock)
+                    CLIENT_CLOCK = max(CLIENT_CLOCK + 1, serverLogicalClock + 1)
 
                 assert magic == MAGIC and version == VERSION
                 if command == HELLO and self.sessionId == sessionId:
@@ -66,7 +66,7 @@ class ClientNonThread:
                 )
 
                 async with self.asyncLock:
-                    CLIENT_CLOCK = max(CLIENT_CLOCK + 1, serverLogicalClock)
+                    CLIENT_CLOCK = max(CLIENT_CLOCK + 1, serverLogicalClock + 1)
 
                 assert magic == MAGIC and version == VERSION
 
@@ -115,42 +115,6 @@ class ClientNonThread:
         await self.waitForServerHello()
 
         await asyncio.gather(self.listenForServer(), self.handleInput())
-
-        # handleInputTask = asyncio.create_task(self.handleInput())
-        # loop = asyncio.get_event_loop()
-        # while self.isClientRunning:
-        #     print("LISTENING FOR SERVER")
-        #     try:
-        #         # data, serverAddress = await loop.sock_recvfrom(self.clientSocket, 4096)
-        #         data, serverAddress = await asyncio.to_thread(
-        #             self.clientSocket.recvfrom, 4096
-        #         )
-        #         message = ast.literal_eval(data.decode())
-        #         magic, version, command, serverSeqNum, sessionId, serverLogicalClock = (
-        #             message[:6]
-        #         )
-        #
-        #         assert magic == MAGIC and version == VERSION
-        #
-        #         if command == ALIVE:
-        #             print("ALIVE")
-        #             self.destroyTimer()
-        #             pass
-        #         elif command == GOODBYE:
-        #             print("Server has terminated the session")
-        #             await self.stopClient()
-        #             return
-        #
-        #     except EOFError or KeyboardInterrupt as e:
-        #         await self.stopClient()
-        #
-        #     except AssertionError as e:
-        #         print(f"Invalid Response {e}")
-        #
-        # await handleInputTask
-        # await asyncio.gather(self.listenForServer(), self.handleInput())
-        # _ = asyncio.create_task(self.handleInput())
-        # _ = asyncio.create_task(self.listenForServer())
 
     async def sendMessage(self, command: int, data: str):
         global CLIENT_CLOCK
