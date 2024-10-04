@@ -10,6 +10,8 @@ PORT = 8888
 # Buffer size for receiving data
 BUFFER_SIZE = 4096
 
+file = open("output.txt", "w")
+
 
 class ProxyServer:
     def __init__(self, portNumber, host="127.0.0.1") -> None:
@@ -36,7 +38,16 @@ class ProxyServer:
 def handle_client(client_socket):
     # Receive the client's request
     request = client_socket.recv(BUFFER_SIZE)
-    print(request.decode())
+
+    data = request.split(b"\r\n")
+
+    for i in range(len(data)):
+        data[i] = data[i].decode()
+
+    for word in data:
+        file.write(word)
+        file.write("\n")
+    file.write("\n")
 
     # # Extract the requested destination from the request
     # request_line = request.split(b"\n")[0]
@@ -100,5 +111,8 @@ def start_proxy_server():
 
 
 if __name__ == "__main__":
-    start_proxy_server()
+    try:
+        start_proxy_server()
+    except:
+        file.close()
     # proxyServer = ProxyServer(portNumber=PORT, host=HOST)
