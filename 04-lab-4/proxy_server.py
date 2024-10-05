@@ -6,11 +6,19 @@ import threading
 # Define the server's address and port
 HOST = "127.0.0.1"
 PORT = 8888
+NEWLINE = "\n"
 
 # Buffer size for receiving data
 BUFFER_SIZE = 4096
 
 file = open("output.txt", "w")
+
+
+class Message(dict):
+    def __getitem__(self, key):
+        if key not in self:
+            return None
+        return self[key]
 
 
 class ProxyServer:
@@ -34,20 +42,36 @@ class ProxyServer:
     def sendMessage(self, message):
         pass
 
+    def parseRequest(self, request):
+        pass
+
+
+def parseRequest(request: bytes):
+    message = Message()
+    if b"\r" in request:
+        data = request.split(b"\r\n")
+    else:
+        data = request.split(b"\n")
+
+    decodedDataList = [dataElement.decode() for dataElement in data]
+
+    # http method
+    methodLine = decodedDataList[0]
+
+    # *_ is to ignore any remaining fields
+    method, target, httpVersion, *_ = methodLine.split()
+
+    message["method"] = method
+    message["target"] = target
+    # ignoring HTTP/1.1 version and setting it to HTTP/1.0
+    message["httpVersion"] = "HTTP/1.0"
+
 
 def handle_client(client_socket):
     # Receive the client's request
     request = client_socket.recv(BUFFER_SIZE)
 
-    data = request.split(b"\r\n")
-
-    for i in range(len(data)):
-        data[i] = data[i].decode()
-
-    for word in data:
-        file.write(word)
-        file.write("\n")
-    file.write("\n")
+    parseRequest(request)
 
     # # Extract the requested destination from the request
     # request_line = request.split(b"\n")[0]
