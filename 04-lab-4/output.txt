@@ -1,3 +1,49 @@
 CONNECT www.google.com:443 HTTP/1.1
+User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:131.0) Gecko/20100101 Firefox/131.0
+Proxy-Connection: keep-alive
+Connection: keep-alive
+Host: www.google.com:443
+
+
+method CONNECT
+target www.google.com:443
+targetHostname www.google.com
+targetPortNumber 443
+httpVersion HTTP/1.0
+userAgent User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:131.0) Gecko/20100101 Firefox/131.0
+proxyConnection Proxy-Connection: close
+connection Connection: close
+hostDetails Host: www.google.com:443
 CONNECT www.google.com:443 HTTP/1.1
+User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:131.0) Gecko/20100101 Firefox/131.0
+Proxy-Connection: keep-alive
+Connection: keep-alive
+Host: www.google.com:443
+
+
+method CONNECT
+target www.google.com:443
+targetHostname www.google.com
+targetPortNumber 443
+httpVersion HTTP/1.0
+userAgent User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:131.0) Gecko/20100101 Firefox/131.0
+proxyConnection Proxy-Connection: close
+connection Connection: close
+hostDetails Host: www.google.com:443
 GET http://google.com/ HTTP/1.1
+Host: google.com
+User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:131.0) Gecko/20100101 Firefox/131.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Connection: keep-alive
+Upgrade-Insecure-Requests: 1
+Priority: u=0, i
+
+
+method GET
+target http://google.com/
+targetHostname http
+targetPortNumber //google.com/
+httpVersion HTTP/1.0
+connection Connection: close

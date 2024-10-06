@@ -11,6 +11,9 @@ NEWLINE = "\n"
 # Buffer size for receiving data
 BUFFER_SIZE = 4096
 
+CONNECT = "CONNECT"
+GET = "GET"
+
 file = open("output.txt", "w")
 
 
@@ -19,6 +22,31 @@ class Message(dict):
         if key not in self:
             return None
         return self[key]
+
+    def filterWhiteSpaces(self):
+        for key in self.items():
+            val = self[key]
+            if isinstance(val, str):
+                self[key] = val.strip()
+
+    def __str__(self) -> str:
+        ans = ""
+        for key, value in self.items():
+            ans += key + " " + value + NEWLINE
+
+        return ans
+
+    def connectRequest(self) -> str:
+        """
+        returns the string format of the proxy CONNECT request
+        """
+        ans = ""
+        ans += f"CONNECT {self['target']} {self['httpVersion']}"
+
+    def getRequest(self) -> str:
+        """
+        returns the string format of the proxy GET request
+        """
 
 
 class ProxyServer:
@@ -46,7 +74,49 @@ class ProxyServer:
         pass
 
 
+def parseConnectRequest(decodedDataList: list[str], message: Message):
+    userAgent = decodedDataList[1]
+    proxyConnection, proxyKeepAlive, *_ = decodedDataList[2].split(":")
+    connection, keepAlive, *_ = decodedDataList[3].split(":")
+
+    message["userAgent"] = userAgent
+    message["proxyConnection"] = f"{proxyConnection}: close"
+    message["connection"] = f"{connection}: close"
+    message["hostDetails"] = decodedDataList[4]
+
+
+def parseGetRequest(decodedDataList: list[str], message: Message):
+
+    connection = "Connection"
+    for data in decodedDataList:
+        if connection in data:
+            connectionType, _, *_ = data.split(":")
+            message["connection"] = f"{connection}: close"
+            break
+
+
 def parseRequest(request: bytes):
+    """
+
+    CONNECT www.google.com:443 HTTP/1.1
+    User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:131.0) Gecko/20100101 Firefox/131.0
+    Proxy-Connection: keep-alive
+    Connection: keep-alive
+    Host: www.google.com:443
+
+
+    GET http://google.com/ HTTP/1.1
+    Host: google.com
+    User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:131.0) Gecko/20100101 Firefox/131.0
+    Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8
+    Accept-Language: en-US,en;q=0.5
+    Accept-Encoding: gzip, deflate
+    Connection: keep-alive
+    Upgrade-Insecure-Requests: 1
+    Priority: u=0, i
+
+
+    """
     message = Message()
     if b"\r" in request:
         data = request.split(b"\r\n")
@@ -54,6 +124,9 @@ def parseRequest(request: bytes):
         data = request.split(b"\n")
 
     decodedDataList = [dataElement.decode() for dataElement in data]
+
+    for word in decodedDataList:
+        file.write(word + NEWLINE)
 
     # http method
     methodLine = decodedDataList[0]
@@ -63,15 +136,36 @@ def parseRequest(request: bytes):
 
     message["method"] = method
     message["target"] = target
+
+    if ":" in target:
+        hostname, portNumber = target.split(":")
+    else:
+        # if port number is not mentioned, take it as 80
+        hostname = target
+        portNumber = 80
+
+    message["targetHostname"] = hostname
+    message["targetPortNumber"] = portNumber
+
     # ignoring HTTP/1.1 version and setting it to HTTP/1.0
     message["httpVersion"] = "HTTP/1.0"
+
+    if method.upper() == CONNECT:
+        parseConnectRequest(decodedDataList, message)
+    elif method.upper() == GET:
+        parseGetRequest(decodedDataList, message)
+
+    message.filterWhiteSpaces()
+    return message
 
 
 def handle_client(client_socket):
     # Receive the client's request
     request = client_socket.recv(BUFFER_SIZE)
 
-    parseRequest(request)
+    message = parseRequest(request)
+
+    file.write(str(message))
 
     # # Extract the requested destination from the request
     # request_line = request.split(b"\n")[0]
