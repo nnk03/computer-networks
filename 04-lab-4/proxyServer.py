@@ -46,10 +46,10 @@ class Message:
 
         targetHost = ""
         targetPortNumber = 0
-        header = ""
+        headerAndBody = ""
         self.targetHost = targetHost
         self.targetPortNumber = targetPortNumber
-        self.header = header
+        self.headerAndBody = headerAndBody
 
         for data in self.requestSplit[1:]:
             line = data.decode()
@@ -79,7 +79,7 @@ class Message:
                 # changing 'keep-alive' to 'close' to not allow persistent connections
                 line = line.replace("keep-alive", "close")
 
-            header += line + "\r\n"
+            headerAndBody += line + "\r\n"
 
         # suppose, host and port details were not extracted
         if "://" in self.targetHost:
@@ -99,13 +99,13 @@ class Message:
         self.targetHost = targetHost
         self.targetPortNumber = int(targetPortNumber)
 
-        self.encodedHeader = header.encode()
+        self.encodedHeaderAndBody = headerAndBody.encode()
 
     def isGetRequest(self):
         return self.method.upper() == GET
 
-    def getEncodedHeader(self):
-        return self.encodedHeader
+    def getEncodedHeaderAndBody(self):
+        return self.encodedHeaderAndBody
 
     def getEncodedRequestLine(self) -> bytes:
         # self.version will be HTTP/1.0
@@ -122,6 +122,23 @@ class ProxyServer:
 
     def logToTerminal(self, message: str):
         print(f">>> {message}")
+
+    def connectionThread(self, sourceConnection, destConnection):
+        assert isinstance(sourceConnection, socket.socket) and isinstance(
+            destConnection, socket.socket
+        )
+
+        try:
+            while True:
+                data = sourceConnection.recv(1024)
+                if not data:
+                    break
+                destConnection.send(data)
+        except Exception as e:
+            logOutput(
+                f"ERROR : Exception {e} in connection between {sourceConnection} and {destConnection}"
+            )
+            return
 
     def proxyThread(self, clientToProxyConnection: socket.socket):
         # intercept message from the browser
@@ -151,10 +168,54 @@ class ProxyServer:
 
         # if message is GET request
         if message.isGetRequest():
-            pass
+            proxyToServerConnection.send(
+                message.getEncodedRequestLine()
+                + b"\r\n"
+                + message.getEncodedHeaderAndBody()
+            )
+            headerAndBody = ""
+            line = ""
+
+            while True:
+                if headerAndBody[-4:] == "\r\n":
+                    break
+
+                line += proxyToServerConnection.recv(1).decode()
+
+                if line[-1] == "\n":
+                    if "keep-alive" in line.lower():
+                        line = line.replace("keep-alive", "close")
+                    headerAndBody += line
+                    line = ""
+
+            clientToProxyConnection.send(headerAndBody.encode())
+
+            # From server
+            data = proxyToServerConnection.recv(1024)
+            while data:
+                clientToProxyConnection.send(data)
+                data = proxyToServerConnection.recv(1024)
+
+            proxyToServerConnection.close()
+            clientToProxyConnection.close()
 
         else:
-            pass
+            clientToProxyConnection.send(STATUS_CODES["ok"])
+
+            clientToServerThread = threading.Thread(
+                target=self.connectionThread,
+                args=(clientToProxyConnection, proxyToServerConnection),
+            )
+            clientToServerThread.daemon = True
+
+            serverToClientThread = threading.Thread(
+                target=self.connectionThread,
+                args=(proxyToServerConnection, clientToProxyConnection),
+            )
+            serverToClientThread.daemon = True
+
+            clientToServerThread.start()
+            serverToClientThread.start()
 
     def startProxyServer(self):
         """
