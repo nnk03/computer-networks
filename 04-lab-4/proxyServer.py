@@ -14,6 +14,7 @@ UNKNOWN_METHOD = "UNKNOWN_METHOD"
 def logOutput(message):
     with LOCK:
         LOG_FILE.write(message)
+        LOG_FILE.write("\n")
 
 
 STATUS_CODES = {
@@ -140,35 +141,35 @@ class ProxyServer:
             )
             return
 
-    def proxyThread(self, clientToProxyConnection: socket.socket):
+    def proxyThread(self, clientProxyConnection: socket.socket):
         # intercept message from the browser
         data = b""
 
         while not data[-4:] == b"\r\n\r\n":
             # 2 CRLF represents end of header
-            data += clientToProxyConnection.recv(1)
+            data += clientProxyConnection.recv(1)
 
         # encapsulate it as a message object which does the processing of the request
         message = Message(data)
-        self.logToTerminal(f">>> {message.getEncodedRequestLine().decode()}")
+        self.logToTerminal(f"{message.getEncodedRequestLine().decode()}")
 
         # proxy acting as a client
-        proxyToServerConnection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        proxyServerConnection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         serverAddress = (message.targetHost, message.targetPortNumber)
         try:
-            proxyToServerConnection.connect(serverAddress)
+            proxyServerConnection.connect(serverAddress)
         except Exception as e:
-            proxyToServerConnection.send(STATUS_CODES["bad-gateway"])
+            proxyServerConnection.send(STATUS_CODES["bad-gateway"])
             logOutput(
                 f"ERROR : when trying to connect to {serverAddress}, exception {e} occurred"
             )
-            clientToProxyConnection.close()
+            clientProxyConnection.close()
             # exit from proxyThread
             return
 
         # if message is GET request
         if message.isGetRequest():
-            proxyToServerConnection.send(
+            proxyServerConnection.send(
                 message.getEncodedRequestLine()
                 + b"\r\n"
                 + message.getEncodedHeaderAndBody()
@@ -180,7 +181,7 @@ class ProxyServer:
                 if headerAndBody[-4:] == "\r\n":
                     break
 
-                line += proxyToServerConnection.recv(1).decode()
+                line += proxyServerConnection.recv(1).decode()
 
                 if line[-1] == "\n":
                     if "keep-alive" in line.lower():
@@ -188,29 +189,29 @@ class ProxyServer:
                     headerAndBody += line
                     line = ""
 
-            clientToProxyConnection.send(headerAndBody.encode())
+            clientProxyConnection.send(headerAndBody.encode())
 
             # From server
-            data = proxyToServerConnection.recv(1024)
+            data = proxyServerConnection.recv(1024)
             while data:
-                clientToProxyConnection.send(data)
-                data = proxyToServerConnection.recv(1024)
+                clientProxyConnection.send(data)
+                data = proxyServerConnection.recv(1024)
 
-            proxyToServerConnection.close()
-            clientToProxyConnection.close()
+            proxyServerConnection.close()
+            clientProxyConnection.close()
 
         else:
-            clientToProxyConnection.send(STATUS_CODES["ok"])
+            clientProxyConnection.send(STATUS_CODES["ok"])
 
             clientToServerThread = threading.Thread(
                 target=self.connectionThread,
-                args=(clientToProxyConnection, proxyToServerConnection),
+                args=(clientProxyConnection, proxyServerConnection),
             )
             clientToServerThread.daemon = True
 
             serverToClientThread = threading.Thread(
                 target=self.connectionThread,
-                args=(proxyToServerConnection, clientToProxyConnection),
+                args=(proxyServerConnection, clientProxyConnection),
             )
             serverToClientThread.daemon = True
 
@@ -252,15 +253,18 @@ class ProxyServer:
             self.stopProxyServer()
 
     def stopProxyServer(self):
+        print(f"Closing Server")
         assert isinstance(self.socket, socket.socket)
         self.socket.close()
         exit()
 
 
 if __name__ == "__main__":
+    hostName = "localhost"
+    portNumber = 8888
+
     if len(argv) == 1:
-        hostName = "localhost"
-        portNumber = 8888
+        pass
 
     elif len(argv) == 2:
         hostName = "localhost"
@@ -273,5 +277,5 @@ if __name__ == "__main__":
     else:
         print("USAGE : ./proxyServer.py [hostName] [portNumber]")
 
-    proxyServer = ProxyServer(hostName, port)
+    proxyServer = ProxyServer(hostName, portNumber)
     proxyServer.startProxyServer()
