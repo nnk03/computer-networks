@@ -2,6 +2,7 @@
 from sys import argv
 import socket
 import threading
+from datetime import datetime
 
 LOG_FILE = open("./output.txt", "w")
 LOCK = threading.Lock()
@@ -11,10 +12,18 @@ GET = "GET"
 UNKNOWN_METHOD = "UNKNOWN_METHOD"
 
 
-def logOutput(message):
+def currentDateTime():
+    return datetime.now().strftime("%d %b %Y %H:%M:%S")
+
+
+def logOutput(message: str):
     with LOCK:
-        LOG_FILE.write(message)
+        LOG_FILE.write(f"{currentDateTime()} - {message}")
         LOG_FILE.write("\n")
+
+
+def logToTerminal(message: str):
+    print(f"{currentDateTime()} - >>> {message}")
 
 
 STATUS_CODES = {
@@ -121,9 +130,6 @@ class ProxyServer:
         self.socket = None
         self.lock = LOCK
 
-    def logToTerminal(self, message: str):
-        print(f">>> {message}")
-
     def connectionThread(self, sourceConnection, destConnection):
         assert isinstance(sourceConnection, socket.socket) and isinstance(
             destConnection, socket.socket
@@ -151,7 +157,7 @@ class ProxyServer:
 
         # encapsulate it as a message object which does the processing of the request
         message = Message(data)
-        self.logToTerminal(f"{message.getEncodedRequestLine().decode()}")
+        logToTerminal(f"{message.getEncodedRequestLine().decode()}")
 
         # proxy acting as a client
         proxyServerConnection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -229,7 +235,7 @@ class ProxyServer:
 
         self.socket.listen()
 
-        print(
+        logToTerminal(
             f"Proxy Server listening at hostname {self.hostName} and portNumber {self.portNumber}"
         )
 
@@ -253,7 +259,7 @@ class ProxyServer:
             self.stopProxyServer()
 
     def stopProxyServer(self):
-        print(f"Closing Server")
+        logToTerminal(f"Closing Server")
         assert isinstance(self.socket, socket.socket)
         self.socket.close()
         exit()
@@ -275,7 +281,7 @@ if __name__ == "__main__":
         portNumber = int(argv[1])
 
     else:
-        print("USAGE : ./proxyServer.py [hostName] [portNumber]")
+        logToTerminal("USAGE : ./proxyServer.py [hostName] [portNumber]")
 
     proxyServer = ProxyServer(hostName, portNumber)
     proxyServer.startProxyServer()
