@@ -279,7 +279,7 @@ class ProxyServer:
 
 if __name__ == "__main__":
     hostName = "localhost"
-    portNumber = 8888
+    portNumber = 8998
 
     if len(argv) == 1:
         pass
