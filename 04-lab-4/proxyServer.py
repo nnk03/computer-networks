@@ -4,7 +4,7 @@ import socket
 import threading
 from datetime import datetime
 
-LOG_FILE = open("./output.txt", "w")
+LOG_FILE = open("./output.log", "w")
 LOCK = threading.Lock()
 
 CONNECT = "CONNECT"
