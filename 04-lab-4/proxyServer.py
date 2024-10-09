@@ -281,7 +281,7 @@ if __name__ == "__main__":
         portNumber = int(argv[1])
 
     else:
-        logToTerminal("USAGE : ./proxyServer.py [hostName] [portNumber]")
+        raise Exception("USAGE : ./proxyServer.py [hostName] [portNumber]")
 
     proxyServer = ProxyServer(hostName, portNumber)
     proxyServer.startProxyServer()
