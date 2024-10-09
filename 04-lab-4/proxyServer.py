@@ -1,4 +1,16 @@
 #!/usr/bin/python3
+
+"""
+
+Computer Networks CS4150
+Lab - 4 : Implemeting proxy server
+By:
+Neeraj Krishna N (112101033)
+Evans Samuel Biju (112101017)
+
+"""
+
+
 from sys import argv
 import socket
 import threading
