@@ -130,7 +130,7 @@ class ProxyServer:
         self.socket = None
         self.lock = LOCK
 
-    def connectionThread(self, sourceConnection, destConnection):
+    def forwardingThread(self, sourceConnection, destConnection):
         assert isinstance(sourceConnection, socket.socket) and isinstance(
             destConnection, socket.socket
         )
@@ -210,13 +210,13 @@ class ProxyServer:
             clientProxyConnection.send(STATUS_CODES["ok"])
 
             clientToServerThread = threading.Thread(
-                target=self.connectionThread,
+                target=self.forwardingThread,
                 args=(clientProxyConnection, proxyServerConnection),
             )
             clientToServerThread.daemon = True
 
             serverToClientThread = threading.Thread(
-                target=self.connectionThread,
+                target=self.forwardingThread,
                 args=(proxyServerConnection, clientProxyConnection),
             )
             serverToClientThread.daemon = True
@@ -244,12 +244,12 @@ class ProxyServer:
                 clientConnection, clientAddress = self.socket.accept()
                 logOutput(f"Connection accpted from {clientAddress}")
 
-                connectionThread = threading.Thread(
+                forwardingThread = threading.Thread(
                     target=self.proxyThread, args=(clientConnection,)
                 )
                 # we want to kill all threads when the main proxy server terminates
-                connectionThread.daemon = True
-                connectionThread.start()
+                forwardingThread.daemon = True
+                forwardingThread.start()
 
         except KeyboardInterrupt:
             logOutput("Closing Proxy Server")
