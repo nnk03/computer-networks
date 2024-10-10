@@ -86,6 +86,8 @@ class Message:
                 # stop at the first ':'
                 hostColonPort = data.split(b":", 1)
                 hostColonPort = hostColonPort[1].decode().strip()
+                # logToTerminal(f"DATA  {data}")
+                # logToTerminal(f"hostColonPort {hostColonPort}")
 
                 if hostColonPort:
                     if ":" in hostColonPort:
@@ -96,35 +98,39 @@ class Message:
                     else:
                         targetHost = hostColonPort
                         self.targetHost = targetHost
+                        if "https:" in self.target:
+                            self.targetPortNumber = 443
+                        else:
+                            self.targetPortNumber = 80
 
             if "keep-alive" in line.lower():
                 # changing 'keep-alive' to 'close' to not allow persistent connections
                 line = line.replace("keep-alive", "close")
 
-            headerAndBody += line + "\r\n"
+            # append the line to headerAndBody after processing
+            headerAndBody += line
 
-        # suppose, host and port details were not extracted
-        if "://" in self.targetHost:
-            # example : 'https://www.google.com:443'
-            httpOrHttps, hostAndPort = self.targetHost.split("//")
-            if httpOrHttps == "http:":
-                targetPortNumber = 80
-            elif httpOrHttps == "https:":
-                targetPortNumber = 443
+            # if it is end of header
+            # if "\r\n\r\n" in line:
+            #     headerAndBody += line + "\r\n\r\n"
+            # else:
+            #     headerAndBody += line + "\r\n"
 
-            if ":" in hostAndPort:
-                targetHost, targetPortNumber = hostAndPort.split(":")
-                targetPortNumber = int(targetPortNumber)
-            else:
-                targetHost = hostAndPort
+        # logToTerminal(f"TARGET {self.target}")
+        # logToTerminal(f"TARGETHOST TARGETPORTNUBMER {targetHost} {targetPortNumber}")
 
-        self.targetHost = targetHost
-        self.targetPortNumber = int(targetPortNumber)
+        # after processing, self.targetHost must not be empty string and
+        # self.targetPortNumber must not be zero
+        assert (
+            self.targetHost and self.targetPortNumber
+        ), f"ERROR : targetHost = {targetHost} and targetPortNumber = {targetPortNumber}"
 
         self.encodedHeaderAndBody = headerAndBody.encode()
 
-    def isGetRequest(self):
-        return self.method.upper() == GET
+    def isNotConnectRequest(self):
+        # some methods in the output resulted in POST, hence checking that
+        # it is not CONNECT
+        return self.method.upper() != CONNECT
 
     def getEncodedHeaderAndBody(self):
         return self.encodedHeaderAndBody
@@ -133,6 +139,9 @@ class Message:
         # self.version will be HTTP/1.0
         requestLine = f"{self.method} {self.target} {self.version}"
         return requestLine.encode()
+
+    def getTotalMessageEncoded(self) -> bytes:
+        return self.getEncodedRequestLine() + b"\r\n" + self.getEncodedHeaderAndBody()
 
 
 class ProxyServer:
@@ -186,32 +195,30 @@ class ProxyServer:
             return
 
         # if message is GET request
-        if message.isGetRequest():
-            proxyServerConnection.send(
-                message.getEncodedRequestLine()
-                + b"\r\n"
-                + message.getEncodedHeaderAndBody()
-            )
-            headerAndBody = ""
-            line = ""
+        if message.isNotConnectRequest():
+            proxyServerConnection.send(message.getTotalMessageEncoded())
 
-            while True:
-                if headerAndBody[-4:] == "\r\n":
-                    break
+            headerFromServer = ""
+            tempData = ""
 
-                line += proxyServerConnection.recv(1).decode()
+            while not headerFromServer[-4:] == "\r\n\r\n":
+                tempData = proxyServerConnection.recv(1).decode()
 
-                if line[-1] == "\n":
-                    if "keep-alive" in line.lower():
-                        line = line.replace("keep-alive", "close")
-                    headerAndBody += line
-                    line = ""
+                headerFromServer += tempData
+                tempData = ""
 
-            clientProxyConnection.send(headerAndBody.encode())
+                # tempData receives data from server byte by byte
+                tempData += proxyServerConnection.recv(1).decode()
+
+            if "keep-alive" in headerFromServer:
+                headerFromServer.replace("keep-alive", "close")
+
+            clientProxyConnection.send(headerFromServer.encode())
 
             # From server
             data = proxyServerConnection.recv(1024)
             while data:
+                # whatever data received from the server is sent to the client
                 clientProxyConnection.send(data)
                 data = proxyServerConnection.recv(1024)
 
@@ -271,7 +278,7 @@ class ProxyServer:
             self.stopProxyServer()
 
     def stopProxyServer(self):
-        logToTerminal(f"Closing Server")
+        logToTerminal("Closing Server")
         assert isinstance(self.socket, socket.socket)
         self.socket.close()
         exit()
