@@ -293,11 +293,10 @@ if __name__ == "__main__":
 
     elif len(argv) == 2:
         hostName = "localhost"
-        portNumber = int(argv[1])
 
     elif len(argv) == 3:
-        hostName = argv[0]
-        portNumber = int(argv[1])
+        hostName = argv[1]
+        portNumber = int(argv[2])
 
     else:
         raise Exception("USAGE : ./proxyServer.py [hostName] [portNumber]")
