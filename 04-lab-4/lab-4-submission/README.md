@@ -17,5 +17,5 @@ The default value for `hostName` and `portNumber` are `localhost` and `8998` res
 
 ## Contributors
 
-[Neeraj Krishna N](https://github.com/nnk03) - 112101033
+[Neeraj Krishna N](https://github.com/nnk03) - 112101033\
 [Evans Samuel Biju](https://github.com/Samuel7Evans7Ph) - 112101017
