@@ -72,3 +72,12 @@ RR - Resource Record\
 ICANN - Internet Corporation for Assigned Names and Numbers\
 
 ARQ - Automatic Repeat reQuest\
+ATM - Asynchronous Transfer Mode\
+ABR - Available Bit Rate\
+
+NAT - Network Address Translator\
+TCAM - Ternary Content Addressable Memories\
+DHCP - Dynamic Host Configuration Protocol\
+CIDR - Classless InterDomain Routing\
+IDS - Intrusion Detection System\
+IPS - Intrusion Prevention System
