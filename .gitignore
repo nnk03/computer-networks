@@ -3,11 +3,27 @@ Solutions_to_book.pdf
 python-asyncio
 cn-top-down-approach-assignments
 
-01-lab-1/*
-*/*.pdf
-!03-lab-3/*.pdf
+# 01-lab-1/*
+# */*.pdf
+# !03-lab-3/*.pdf
 
 # !01-lab-1/Computer_Networks_Assignment_1.pdf
 !*/Computer_Networks_Assignment*
 !*/Computer_Networks_Lab_Assignment*
 */.venv
+01-lab-1/assignment-1-part-2-q1-7.pcap
+01-lab-1/assingment-1-part-2-q12-15.pcap
+01-lab-1/assingment-1-part-2-q16-17.pcap
+01-lab-1/assingment-1-part-2-q18-19.pcap
+01-lab-1/assingment-1-part-2-q8-11.pcapng
+01-lab-1/http-authentication.pcap
+01-lab-1/trace-protocol-layers.pcap
+01-lab-1/112101033_CN_LAB_ASSIGNMENT 1_Handwritten.pdf
+01-lab-1/112101033_NEERAJ_CN_LAB_ASSIGNMENT 1_compressed (1).pdf
+01-lab-1/112101033_NEERAJ_CN_LAB_ASSIGNMENT 1_compressed (2).pdf
+01-lab-1/112101033_NEERAJ_CN_LAB_ASSIGNMENT 1_compressed.pdf
+01-lab-1/112101033_NEERAJ_CN_LAB_ASSIGNMENT 1.pdf
+01-lab-1/Computer_Networks_Assignment_1_compressed (3).pdf
+01-lab-1/Computer_Networks_Assignment_1.pdf
+01-lab-1/Lab-1 (Wireshark).pdf
+theory-assignment/
