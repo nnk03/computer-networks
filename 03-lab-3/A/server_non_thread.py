@@ -149,7 +149,7 @@ class SessionNonThread:
 class ServerNonThread:
     def __init__(self, hostname="127.0.0.1", portNum=1234):
         self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.serverAddress = (hostname, portNum)
+        self.serverAddress = ("", portNum)
         self.serverSocket.bind(self.serverAddress)
 
         self.serverSocket.setblocking(False)

@@ -202,7 +202,7 @@ class ProxyServer:
             tempData = ""
 
             while not headerFromServer[-4:] == "\r\n\r\n":
-                tempData = proxyServerConnection.recv(1).decode()
+                tempData += proxyServerConnection.recv(1).decode()
 
                 headerFromServer += tempData
                 tempData = ""
