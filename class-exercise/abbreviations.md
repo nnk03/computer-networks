@@ -65,7 +65,9 @@ BIND - Berkeley Internet Name Domain\
 HTTP - Port 80\
 SMTP - Port 25???(Now, 25 is for SMTP relaying??, default now is 587)\
 DNS - Port 53\
-FTP - Port 21 and 20
+FTP - Port 21 and 20\
+BGP - TCP Port 179\
+OSPF - Port 89 ??
 
 RR - Resource Record\
 
