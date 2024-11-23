@@ -36,6 +36,9 @@ HTML - Hyper Text Markup language\
 IP - Internet Protocol\
 PPP - Point to Point Protocol\
 DHCP - Dynamic Host Configuration Protocol\
+PGP - Pretty Good Privacy\
+EIGRP - Enhanced Interior Gateway Routing Protocol\
+OSPF - Open Shortest Path First
 
 TELNET - Teletype Network
 
@@ -67,9 +70,11 @@ SMTP - Port 25???(Now, 25 is for SMTP relaying??, default now is 587)\
 DNS - Port 53\
 FTP - Port 21 and 20\
 BGP - TCP Port 179\
-OSPF - Port 89 ??
+OSPF - Port 89 ??\
+ARP - Type Field 0806 in hexadecimal\
+ICMP - Port 1
 
-RR - Resource Record\
+RR - Resource Record
 
 ICANN - Internet Corporation for Assigned Names and Numbers\
 
@@ -83,3 +88,18 @@ DHCP - Dynamic Host Configuration Protocol\
 CIDR - Classless InterDomain Routing\
 IDS - Intrusion Detection System\
 IPS - Intrusion Prevention System
+
+PPP - Point-to-Point Protocol\
+HDLC - High level Data Link Control
+
+Channel Partitioning Protocol
+
+TDM, FDM\
+CDMA - Code Division Multiple Access\
+CSMA - Carrier Sensing Multiple Access\
+CSMA/CD - CSMA with Collision Detection
+
+DES - Data Encryption Standard\
+AES - Advanced Encryption Standard\
+MD5 - ?\
+SHA - Secure Hash Algorithm
